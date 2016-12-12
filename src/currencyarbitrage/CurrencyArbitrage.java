@@ -2,17 +2,18 @@ package currencyarbitrage;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
-import java.util.Map.Entry;
+import java.io.File;
+import java.util.Scanner;
 
 /**
  * @author Jeremy M
  */
-public class CurrencyArbitrage{
-    
+public class CurrencyArbitrage {
+
     public static void main(String[] args) {
         CurrencyArbitrage ca = new CurrencyArbitrage();
     }
-    
+
     CNode CAN; //Canadian Dollar
     CNode EUR; //Euro
     CNode JPY; //Japan Yen
@@ -26,37 +27,84 @@ public class CurrencyArbitrage{
     public ArrayList<CNode> cur_list;
     public ArrayList<CNode> path1;
     public TreeMap<Double, ArrayList> val_ex;
-    
-    CurrencyArbitrage(){
-        addExchanges();
+    int currencies;
+
+    CurrencyArbitrage() {
+        cur_list = new ArrayList<>();
+        importExchanges();
         
+        //addExchanges();
         genAllTrades();
-        
-        //createRandomPaths();
+        createRandomPaths(25);
         
     }
-    
-    void genAllTrades(){
-        for(CNode c: cur_list){
-            c.exchangePath(c, 2, 1000, null);
+
+    void genAllTrades() {
+        for (CNode c : cur_list) {
+            c.exchangePath(c, 7, 1000, null);
         }
         val_ex = CNode.value_exch;
-        for(Double d: val_ex.keySet()){
-           System.out.printf("%f %s \n", d, val_ex.get(d));
+        for (Double d : val_ex.keySet()) {
+            System.out.printf("%f %s \n", d, val_ex.get(d));
         }
         System.out.println(val_ex.size());
     }
-    
-    void createRandomPaths(){
-        for(int i = 0;i<50;i++){
+
+    void createRandomPaths(int n) {
+        for (int i = 0; i < n; i++) {
             path1 = CNode.createRandomPath(null, null);
-        
+
             System.out.println(path1.toString());
             System.out.println(CNode.singlePathRate(path1, 1000));
         }
     }
+
+    private void importExchanges() {
+        Scanner in;
+        String line;
+        String[] exchanges;
+        CNode cn1 = null;
+        CNode cn2 = null;
+        try {
+            in = new Scanner(new File("exchangeRatesF2016.txt"));
+        } catch (Exception e) {
+            System.out.println(e);
+            in = new Scanner(System.in);
+        }
+        do {
+            line = in.nextLine();
+        } while (!line.contains("*"));
+
+        currencies = Integer.parseInt(in.nextLine());
+
+        while (in.hasNext()) {
+            exchanges = in.nextLine().split("\\s+", 3);
+            double rate = Double.parseDouble(exchanges[2].trim());
+
+            cn1 = getCNodeFromString(exchanges[0]);
+            cn2 = getCNodeFromString(exchanges[1]);            
+            if(!cur_list.contains(cn1)) cur_list.add(cn1);
+            if(!cur_list.contains(cn2)) cur_list.add(cn2);
+            
+            cn1.setExchangeRate(cn2, rate);
+        }
+    }
     
-    void addExchanges(){
+    public CNode getCNodeFromString(String s){
+        if (CNode.CNodeList==null){
+            return new CNode(s);
+        }
+        if (CNode.CurrencyList.contains(s)){
+            for(CNode c:CNode.CNodeList){
+                if (s.equals(c.getCurrency())) return c;
+            }
+        } else {
+            return new CNode(s);
+        }
+        return null;
+    }
+
+    void addExchanges() {
         CAN = new CNode("CAN"); //Canadian Dollar
         EUR = new CNode("EUR"); //Euro
         JPY = new CNode("JPY"); //Japan Yen
@@ -66,54 +114,53 @@ public class CurrencyArbitrage{
         AUD = new CNode("AUD"); //Australian Kangaroo Buck
         GBP = new CNode("GBP"); //UK Pound
         USD = new CNode("USD"); //USA Dollar
-        
-        cur_list = new ArrayList<>();
+
         empty_list = new ArrayList();
-        
-        CAN.addExchange(EUR, .68);
-        CAN.addExchange(JPY, 78.926);
-        CAN.addExchange(NOK, 6.205);
-        CAN.addExchange(SEK, 6.707);
-        CAN.addExchange(RUB, 48.45);
-        CAN.addExchange(GBP, .59);
-        CAN.addExchange(USD, .704);
-        CAN.addExchange(AUD, .978);
-        
-        EUR.addExchange(JPY, 116.021);
-        EUR.addExchange(NOK, 9.129);
-        EUR.addExchange(SEK, 9.869);
-        EUR.addExchange(RUB, 71.284);
-        EUR.addExchange(GBP, .869);
-        EUR.addExchange(USD, 1.090);
-        EUR.addExchange(AUD, 1.440);
-        
-        JPY.addExchange(NOK, .079);
-        JPY.addExchange(SEK, .085);
-        JPY.addExchange(RUB, .615);
-        JPY.addExchange(GBP, .007);
-        JPY.addExchange(USD, .009);
-        JPY.addExchange(AUD, .012);
-        
-        NOK.addExchange(SEK, 1.081);
-        NOK.addExchange(RUB, 7.807);
-        NOK.addExchange(GBP, .095);
-        NOK.addExchange(USD, .119);
-        NOK.addExchange(AUD, .171);
-        
-        SEK.addExchange(RUB, 7.225);
-        SEK.addExchange(GBP, .088);
-        SEK.addExchange(USD, .111);
-        SEK.addExchange(AUD, .146);
-        
-        RUB.addExchange(GBP, .012);
-        RUB.addExchange(USD, .015);
-        RUB.addExchange(AUD, .020);
-        
-        AUD.addExchange(GBP, .604);
-        AUD.addExchange(USD, .757);
-        
-        GBP.addExchange(USD, 1.254);
-        
+
+        CAN.setExchangeRate(EUR, .68);
+        CAN.setExchangeRate(JPY, 78.926);
+        CAN.setExchangeRate(NOK, 6.205);
+        CAN.setExchangeRate(SEK, 6.707);
+        CAN.setExchangeRate(RUB, 48.45);
+        CAN.setExchangeRate(GBP, .59);
+        CAN.setExchangeRate(USD, .704);
+        CAN.setExchangeRate(AUD, .978);
+
+        EUR.setExchangeRate(JPY, 116.021);
+        EUR.setExchangeRate(NOK, 9.129);
+        EUR.setExchangeRate(SEK, 9.869);
+        EUR.setExchangeRate(RUB, 71.284);
+        EUR.setExchangeRate(GBP, .869);
+        EUR.setExchangeRate(USD, 1.090);
+        EUR.setExchangeRate(AUD, 1.440);
+
+        JPY.setExchangeRate(NOK, .079);
+        JPY.setExchangeRate(SEK, .085);
+        JPY.setExchangeRate(RUB, .615);
+        JPY.setExchangeRate(GBP, .007);
+        JPY.setExchangeRate(USD, .009);
+        JPY.setExchangeRate(AUD, .012);
+
+        NOK.setExchangeRate(SEK, 1.081);
+        NOK.setExchangeRate(RUB, 7.807);
+        NOK.setExchangeRate(GBP, .095);
+        NOK.setExchangeRate(USD, .119);
+        NOK.setExchangeRate(AUD, .171);
+
+        SEK.setExchangeRate(RUB, 7.225);
+        SEK.setExchangeRate(GBP, .088);
+        SEK.setExchangeRate(USD, .111);
+        SEK.setExchangeRate(AUD, .146);
+
+        RUB.setExchangeRate(GBP, .012);
+        RUB.setExchangeRate(USD, .015);
+        RUB.setExchangeRate(AUD, .020);
+
+        AUD.setExchangeRate(GBP, .604);
+        AUD.setExchangeRate(USD, .757);
+
+        GBP.setExchangeRate(USD, 1.254);
+
         cur_list.add(CAN);
         cur_list.add(EUR);
         cur_list.add(JPY);
@@ -125,6 +172,4 @@ public class CurrencyArbitrage{
         cur_list.add(USD);
     }
 
-    
-    
 }

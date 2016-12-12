@@ -9,15 +9,16 @@ import java.util.Random;
  * @author Jeremy M
  */
 public class CNode{
-    final String ISO;
+    final String COUNTRY;
     public HashMap<CNode, Double> exchanges;
     public static ArrayList<CNode> CNodeList;
+    public static ArrayList<String> CurrencyList;
     double rate;
     public static TreeMap<Double, ArrayList> value_exch;
     
     
     CNode(String cur){
-        ISO = cur;
+        COUNTRY = cur;
         exchanges = new HashMap();
         if (CNodeList==null) {
             CNodeList = new ArrayList<>();
@@ -25,13 +26,47 @@ public class CNode{
         if (value_exch==null){
             value_exch = new TreeMap<>();
         }
+        if (CurrencyList==null){
+            CurrencyList = new ArrayList<>();
+        }
+        
         CNodeList.add(this);
+        CurrencyList.add(COUNTRY);
     }
     
-    /*Add a exchange on this node and the exchange node with inverse
-    * exchange rate
+    
+    /*
+    *   Params Currence 1 and Currency 2
+    *   and the exchange rate between them
     */
-    public void addExchange(CNode iso, double r){
+    CNode(String c1, String c2, double xr){
+        COUNTRY = c1;
+        CNode cn = new CNode(c2);
+        
+        
+        exchanges = new HashMap();
+        if (CNodeList==null) {
+            CNodeList = new ArrayList<>();
+        }
+        if (value_exch==null){
+            value_exch = new TreeMap<>();
+        }
+        if (!CNodeList.contains(this)){
+            CNodeList.add(this);
+        }
+        
+        setExchangeRate(cn, xr);
+    }
+    
+    /*Add a exchange rate on this node and the exchange node 
+    * with inverse exchange rate
+    */
+    public String getCurrency(){
+        return COUNTRY;
+    }
+    
+    
+    public void setExchangeRate(CNode iso, double r){
         exchanges.put(iso, r);
         iso.exchanges.put(this, 1/r);
     }
@@ -57,16 +92,18 @@ public class CNode{
     }
     
     public CNode getCNode(String i){
-        if (i.equals(ISO)){
+        if (i.equals(COUNTRY)){
             return this;
         } else {
             return null;
         }
     }
     
+    
+    
     @Override
     public String toString(){
-        return ISO;
+        return COUNTRY;
     }
     
     /* Create Exchange Paths with a cycle that ends where it start
